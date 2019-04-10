@@ -185,6 +185,7 @@ var Date = exports.Date = function () {
                 domClass: ['rolldate-year', 'rolldate-month', 'rolldate-day', 'rolldate-hour', 'rolldate-min', 'rolldate-sec'],
                 opts: { //插件默认配置
                     el: '',
+                    btnClean: false,
                     format: 'YYYY-MM-DD',
                     beginYear: 2000,
                     endYear: 2100,
@@ -192,8 +193,10 @@ var Date = exports.Date = function () {
                     moveEnd: null,
                     confirmBefore: null,
                     confirmEnd: null,
+                    cancelEnd: null,
+                    cleanEnd: null,
                     minStep: 1,
-                    lang: { title: '选择日期', cancel: '取消', confirm: '确认', year: '年', month: '月', day: '日', hour: '时', min: '分', sec: '秒' }
+                    lang: { title: '选择日期', cancel: '取消', clean: '清除', confirm: '确认', year: '年', month: '月', day: '日', hour: '时', min: '分', sec: '秒' }
                 }
             };
         }
@@ -280,7 +283,8 @@ var Date = exports.Date = function () {
                 }
                 ul += '</ul></div>';
             }
-            var $html = '<div class="rolldate-mask"></div>\n            <div class="rolldate-panel fadeIn">\n                <header>\n                    <span class="rolldate-btn rolldate-cancel">' + lang.cancel + '</span>\n                    ' + lang.title + '\n                    <span class="rolldate-btn rolldate-confirm">' + lang.confirm + '</span>\n                </header>\n                <section class="rolldate-content">\n                    <div class="rolldate-dim mask-top"></div>\n                    <div class="rolldate-dim mask-bottom"></div>\n                    <div class="rolldate-wrapper">\n                        ' + ul + '\n                    </div>\n                </section>\n            </div>',
+            var leftBtn = _this.config.btnClean ? '<span class="rolldate-btn rolldate-clean">' + lang.clean + '</span>' : '<span class="rolldate-btn rolldate-cancel">' + lang.cancel + '</span>';
+            var $html = '<div class="rolldate-mask"></div>\n            <div class="rolldate-panel fadeIn">\n                <header>\n                    ' + leftBtn + '\n                    ' + lang.title + '\n                    <span class="rolldate-btn rolldate-confirm">' + lang.confirm + '</span>\n                </header>\n                <section class="rolldate-content">\n                    <div class="rolldate-dim mask-top"></div>\n                    <div class="rolldate-dim mask-bottom"></div>\n                    <div class="rolldate-wrapper">\n                        ' + ul + '\n                    </div>\n                </section>\n            </div>',
                 box = document.createElement("div");
 
             // 在微信中输入框在底部时，偶现按钮点击范围被挤压，暂定增加按钮高度
@@ -348,14 +352,22 @@ var Date = exports.Date = function () {
             var _this = this,
                 mask = _this.$('.rolldate-mask'),
                 cancel = _this.$('.rolldate-cancel'),
+                clean = _this.$('.rolldate-clean'),
                 confirm = _this.$('.rolldate-confirm');
 
             mask.addEventListener('click', function () {
-                _this.destroy();
+                _this.destroy('mask');
             });
-            cancel.addEventListener('click', function () {
-                _this.destroy();
-            });
+            if (cancel) {
+                cancel.addEventListener('click', function () {
+                    _this.destroy('cancel');
+                });
+            }
+            if (clean) {
+                clean.addEventListener('click', function () {
+                    _this.destroy('clean');
+                });
+            }
             confirm.addEventListener('click', function () {
                 var el = _this.$(_this.config.el),
                     data = _this.baseData(),
@@ -414,7 +426,7 @@ var Date = exports.Date = function () {
                 } else {
                     el.innerText = date;
                 }
-                _this.destroy(date);
+                _this.destroy('confirm', date);
                 el.date = nativeDate;
             });
         }
@@ -438,17 +450,33 @@ var Date = exports.Date = function () {
         }
     }, {
         key: 'destroy',
-        value: function destroy(date) {
+        value: function destroy(event, date) {
             var _this = this;
 
             _this.scroll.forEach(function (v, i) {
                 v.destroy();
             });
 
-            if (_this.config.confirmEnd) {
-                var el = _this.$(_this.config.el);
+            if (event === 'confirm') {
+                if (_this.config.confirmEnd) {
+                    var el = _this.$(_this.config.el);
 
-                _this.config.confirmEnd.call(_this, el, date);
+                    _this.config.confirmEnd.call(_this, el, date);
+                }
+            }
+            if (event === 'cancel') {
+                if (_this.config.cancelEnd) {
+                    var _el = _this.$(_this.config.el);
+
+                    _this.config.cancelEnd.call(_this, _el);
+                }
+            }
+            if (event === 'clean') {
+                if (_this.config.cleanEnd) {
+                    var _el2 = _this.$(_this.config.el);
+
+                    _this.config.cleanEnd.call(_this, _el2);
+                }
             }
             _this.$('.rolldate-panel').className = 'rolldate-panel fadeOut';
             setTimeout(function () {
@@ -503,7 +531,7 @@ exports = module.exports = __webpack_require__(3)(false);
 
 
 // module
-exports.push([module.i, "ul {\n  margin: 0;\n  padding: 0;\n}\nli {\n  list-style-type: none;\n}\n.rolldate-container {\n  font-size: 20px;\n  color: #333;\n  text-align: center;\n}\n.rolldate-container header {\n  position: relative;\n  line-height: 60px;\n  font-size: 18px;\n  border-bottom: 1px solid #e0e0e0;\n}\n.rolldate-container .rolldate-mask {\n  position: fixed;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  background: #000;\n  opacity: 0.5;\n  z-index: 100;\n}\n.rolldate-container .rolldate-panel {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  width: 100%;\n  height: 273px;\n  z-index: 101;\n  background: #fff;\n  -webkit-animation-duration: 300ms;\n          animation-duration: 300ms;\n  -webkit-animation-delay: 0s;\n          animation-delay: 0s;\n  -webkit-animation-iteration-count: 1;\n          animation-iteration-count: 1;\n}\n.rolldate-container .rolldate-btn {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  padding: 0 15px;\n  color: #666;\n  font-size: 16px;\n  cursor: pointer;\n  -webkit-tap-highlight-color: transparent;\n}\n.rolldate-container.wx .rolldate-btn {\n  height: 150%;\n}\n.rolldate-container .rolldate-confirm {\n  left: auto;\n  right: 0;\n  color: #007bff;\n}\n.rolldate-container .rolldate-content {\n  position: relative;\n  top: 20px;\n}\n.rolldate-container .rolldate-wrapper {\n  display: -webkit-box;\n  display: -webkit-flex;\n  display: -ms-flexbox;\n  display: flex;\n}\n.rolldate-container .rolldate-wrapper > div {\n  -webkit-box-flex: 1;\n  -webkit-flex: 1;\n      -ms-flex: 1;\n          flex: 1;\n  height: 173px;\n  line-height: 36px;\n  overflow: hidden;\n  -webkit-flex-basis: -8e;\n      -ms-flex-preferred-size: -8e;\n          flex-basis: -8e;\n  width: 1%;\n}\n.rolldate-container .rolldate-wrapper ul {\n  margin-top: 68px;\n}\n.rolldate-container .rolldate-wrapper li {\n  height: 36px;\n}\n.rolldate-container .rolldate-dim {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 100%;\n  height: 68px;\n  background: -webkit-gradient(linear, left bottom, left top, from(hsla(0, 0%, 100%, 0.4)), to(hsla(0, 0%, 100%, 0.8)));\n  background: -webkit-linear-gradient(bottom, hsla(0, 0%, 100%, 0.4), hsla(0, 0%, 100%, 0.8));\n  background: -o-linear-gradient(bottom, hsla(0, 0%, 100%, 0.4), hsla(0, 0%, 100%, 0.8));\n  background: linear-gradient(0deg, hsla(0, 0%, 100%, 0.4), hsla(0, 0%, 100%, 0.8));\n  pointer-events: none;\n  -webkit-transform: translateZ(0);\n  transform: translateZ(0);\n  z-index: 10;\n}\n.rolldate-container .mask-top {\n  border-bottom: 1px solid #ebebeb;\n}\n.rolldate-container .mask-bottom {\n  top: auto;\n  bottom: 1px;\n  border-top: 1px solid #ebebeb;\n}\n.rolldate-container .fadeIn {\n  -webkit-animation-name: fadeIn;\n          animation-name: fadeIn;\n}\n.rolldate-container .fadeOut {\n  -webkit-animation-name: fadeOut;\n          animation-name: fadeOut;\n}\n@-webkit-keyframes fadeIn {\n  from {\n    bottom: -273px;\n  }\n  to {\n    bottom: 0;\n  }\n}\n@keyframes fadeIn {\n  from {\n    bottom: -273px;\n  }\n  to {\n    bottom: 0;\n  }\n}\n@-webkit-keyframes fadeOut {\n  from {\n    bottom: 0;\n  }\n  to {\n    bottom: -273px;\n    display: none;\n  }\n}\n@keyframes fadeOut {\n  from {\n    bottom: 0;\n  }\n  to {\n    bottom: -273px;\n    display: none;\n  }\n}\n@media screen and (max-width: 414px) {\n  .rolldate-container {\n    font-size: 18px;\n  }\n}\n@media screen and (max-width: 320px) {\n  .rolldate-container {\n    font-size: 15px;\n  }\n}\n", ""]);
+exports.push([module.i, "ul {\n  margin: 0;\n  padding: 0;\n}\nli {\n  list-style-type: none;\n}\n.rolldate-container {\n  font-size: 0.8rem;\n  color: #333;\n  text-align: center;\n}\n.rolldate-container header {\n  position: relative;\n  line-height: 2rem;\n  font-size: 0.8rem;\n  border-bottom: 0.05rem solid #e0e0e0;\n}\n.rolldate-container .rolldate-mask {\n  position: fixed;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  background: #000;\n  opacity: 0.5;\n  z-index: 100;\n}\n.rolldate-container .rolldate-panel {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  width: 100%;\n  height: 13.65rem;\n  z-index: 101;\n  background: #fff;\n  -webkit-animation-duration: 300ms;\n          animation-duration: 300ms;\n  -webkit-animation-delay: 0s;\n          animation-delay: 0s;\n  -webkit-animation-iteration-count: 1;\n          animation-iteration-count: 1;\n}\n.rolldate-container .rolldate-btn {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  padding: 0 0.75rem;\n  color: #666;\n  font-size: 0.7rem;\n  cursor: pointer;\n  -webkit-tap-highlight-color: transparent;\n}\n.rolldate-container.wx .rolldate-btn {\n  height: 150%;\n}\n.rolldate-container .rolldate-confirm {\n  left: auto;\n  right: 0;\n  color: #37b2c0;\n}\n.rolldate-container .rolldate-content {\n  position: relative;\n  top: 1rem;\n}\n.rolldate-container .rolldate-wrapper {\n  display: -webkit-box;\n  display: -webkit-flex;\n  display: -ms-flexbox;\n  display: flex;\n}\n.rolldate-container .rolldate-wrapper > div {\n  -webkit-box-flex: 1;\n  -webkit-flex: 1;\n      -ms-flex: 1;\n          flex: 1;\n  height: 8.65rem;\n  line-height: 1.8rem;\n  overflow: hidden;\n  -webkit-flex-basis: -8e;\n      -ms-flex-preferred-size: -8e;\n          flex-basis: -8e;\n  width: 1%;\n}\n.rolldate-container .rolldate-wrapper ul {\n  margin-top: 3.4rem;\n}\n.rolldate-container .rolldate-wrapper li {\n  height: 1.8rem;\n}\n.rolldate-container .rolldate-dim {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 100%;\n  height: 3.4rem;\n  background: -webkit-gradient(linear, left bottom, left top, from(hsla(0, 0%, 100%, 0.4)), to(hsla(0, 0%, 100%, 0.8)));\n  background: -webkit-linear-gradient(bottom, hsla(0, 0%, 100%, 0.4), hsla(0, 0%, 100%, 0.8));\n  background: -o-linear-gradient(bottom, hsla(0, 0%, 100%, 0.4), hsla(0, 0%, 100%, 0.8));\n  background: linear-gradient(0deg, hsla(0, 0%, 100%, 0.4), hsla(0, 0%, 100%, 0.8));\n  pointer-events: none;\n  -webkit-transform: translateZ(0);\n  transform: translateZ(0);\n  z-index: 10;\n}\n.rolldate-container .mask-top {\n  border-bottom: 0.05rem solid #ebebeb;\n}\n.rolldate-container .mask-bottom {\n  top: auto;\n  bottom: 0.05rem;\n  border-top: 0.05rem solid #ebebeb;\n}\n.rolldate-container .fadeIn {\n  -webkit-animation-name: fadeIn;\n          animation-name: fadeIn;\n}\n.rolldate-container .fadeOut {\n  -webkit-animation-name: fadeOut;\n          animation-name: fadeOut;\n}\n@-webkit-keyframes fadeIn {\n  from {\n    bottom: -13.65rem;\n  }\n  to {\n    bottom: 0;\n  }\n}\n@keyframes fadeIn {\n  from {\n    bottom: -13.65rem;\n  }\n  to {\n    bottom: 0;\n  }\n}\n@-webkit-keyframes fadeOut {\n  from {\n    bottom: 0;\n  }\n  to {\n    bottom: -13.65rem;\n    display: none;\n  }\n}\n@keyframes fadeOut {\n  from {\n    bottom: 0;\n  }\n  to {\n    bottom: -13.65rem;\n    display: none;\n  }\n}\n@media screen and (max-width: 20.7rem) {\n  .rolldate-container {\n    font-size: 0.9rem;\n  }\n}\n@media screen and (max-width: 16rem) {\n  .rolldate-container {\n    font-size: 0.75rem;\n  }\n}\n", ""]);
 
 // exports
 
