@@ -55,7 +55,18 @@ export class Date {
                 cancelEnd: null,
                 cleanEnd: null,
                 minStep: 1,
-                lang: { title: '选择日期', cancel: '取消', clean: '清除', confirm: '确认', year: '年', month: '月', day: '日', hour: '时', min: '分', sec: '秒' }
+                lang: {
+                    title: '选择日期',
+                    cancel: '取消',
+                    clean: '清除',
+                    confirm: '确认',
+                    year: '年',
+                    month: '月',
+                    day: '日',
+                    hour: '时',
+                    min: '分',
+                    sec: '秒',
+                }
             }
         };
     }
@@ -141,12 +152,14 @@ export class Date {
         const leftBtn = _this.config.btnClean ?
             `<span class="rolldate-btn rolldate-clean">${lang.clean}</span>`
             : `<span class="rolldate-btn rolldate-cancel">${lang.cancel}</span>`;
+        const rightBtn = `<span class="rolldate-btn rolldate-confirm">${lang.confirm}</span>`;
+        const title = `<span class="rolldate-title">${lang.title}</span>`
         let $html = `<div class="rolldate-mask"></div>
             <div class="rolldate-panel fadeIn">
                 <header>
                     ${leftBtn}
-                    ${lang.title}
-                    <span class="rolldate-btn rolldate-confirm">${lang.confirm}</span>
+                    ${title}
+                    ${rightBtn}
                 </header>
                 <section class="rolldate-content">
                     <div class="rolldate-dim mask-top"></div>
@@ -203,6 +216,16 @@ export class Date {
             })
 
         }
+
+        // 防止背景滚动
+        const bodyEl = document.body;
+        const top = window.scrollY;
+        bodyEl.style.position = 'fixed';
+        bodyEl.style.top = -top + 'px';
+        bodyEl.style.right = 0;
+        bodyEl.style.bottom = 0;
+        bodyEl.style.left = 0;
+
         _this.event();
     }
     $(selector, flag) {
@@ -306,6 +329,15 @@ export class Date {
     }
     destroy(event, date) {
         let _this = this;
+
+        const bodyEl = document.body;
+        const top = -document.body.style.top.slice(0, -2)
+        bodyEl.style.position = '';
+        bodyEl.style.top = '';
+        bodyEl.style.right = '';
+        bodyEl.style.bottom = '';
+        bodyEl.style.left = '';
+        window.scrollTo(0, top);
 
         _this.scroll.forEach(function (v, i) { v.destroy(); })
 
